@@ -1,27 +1,35 @@
+'use strict';
+
 var fs = require('fs');
 var path = require('path');
 
-function walk(directoryName) {
+function walk(directoryName, done) {
     console.log(`Walking through ${directoryName}`);
-    fs.readdir(directoryName, function(err, files) {
+    fs.readdir(directoryName, function (err, files) {
         if (err) {
             throw err;
         }
 
-        debugger;
-        let onlyFiles = [];
+        const filePromises = [];
+        const onlyFiles = [];
         files.forEach(fileName => {
             let fullPath = path.join(directoryName, fileName);
-            let stats = fs.statSync(fullPath);
-                
-            if (stats.isDirectory()) {
-                walk(fullPath);
-            }
-            else {
-                onlyFiles.push(fileName);
-            }
+            filePromises.push(new Promise((resolve) => {
+                fs.stat(fullPath, function(err, stats) {
+                    if (stats.isDirectory()) {
+                        walk(fullPath, resolve);
+                    } else {
+                        onlyFiles.push(fileName);
+                        resolve();
+                    }
+                });
+            }));
         });
-        info.add(directoryName, onlyFiles);
+
+        Promise.all(filePromises).then(() => {
+            info.add(directoryName, onlyFiles);
+            done();
+        });
     });
 }
 
@@ -49,6 +57,10 @@ class Info {
     }
 }
 
+const label = "main";
+console.time(label);
 let info = new Info();
-walk("C:/Users/kiewi/OneDrive/Pictures");
-info.summary();
+walk("C:/Users/kiewi/OneDrive/Pictures", () => {
+    info.summary();
+    console.timeEnd(label);
+});

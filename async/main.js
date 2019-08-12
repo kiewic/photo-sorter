@@ -69,7 +69,7 @@ function walk(directoryName, info, done) {
     });
 
     Promise.all([promise1, promise2]).then(() => {
-        oneDriveInfo.findMatch(sourceInfo);
+        oneDriveInfo.findMatchingFiles(sourceInfo);
     }).catch((err) => {
         console.error(err);
     });

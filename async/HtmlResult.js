@@ -4,7 +4,11 @@ const fs = require('fs');
 const child_process = require('child_process');
 const path = require('path');
 
+// TODO: Can this be a static property?
+let fileId = 1;
+
 class HtmlResult {
+
     constructor() {
         this.output = "";
     }
@@ -42,11 +46,11 @@ class HtmlResult {
     }
 
     buildImg(dirName, fileName) {
-        return `<img width="192" src="${path.join(dirName, fileName)}">`;
+        return `<img width="192" src="${path.join(dirName, fileName)}" title="${fileName}">`;
     }
 
     save() {
-        const resultsFileName = 'results.html';
+        const resultsFileName = `results${fileId++}.html`;
         fs.writeFileSync(resultsFileName, this.output);
         child_process.exec(`start ${resultsFileName}`);
     }

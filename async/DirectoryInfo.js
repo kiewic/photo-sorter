@@ -36,12 +36,14 @@ class DirectoryInfo {
         }, []);
     }
 
+    /** Returns an string[] */
     compareFileArrays(source, target) {
         const matches = [];
-        source.forEach((fileName) => {
-            if (target.includes(fileName)) {
-                matches.push(fileName);
-            };
+        source.forEach((fileNameAndSize) => {
+            const targetFileNameAndSize = target.find(t => t[0] === fileNameAndSize[0] && t[1] === fileNameAndSize[1]);
+            if (targetFileNameAndSize) {
+                matches.push(fileNameAndSize[0]);
+            }
         })
         return matches;
     }
@@ -64,8 +66,8 @@ class DirectoryInfo {
     }
 
     /** Find the files matching a file within any subdirectory, and the photos not matching any file. */
-    findMatchingFiles(source) {
-        for (const sourceDirName in source.dirs) {
+    findMatchingFiles(source, moveFiles = false) {
+        for (let sourceDirName in source.dirs) {
             const result = new HtmlResult();
             let sourceFiles = source.dirs[sourceDirName];
             result.addTitle(sourceDirName);
@@ -75,21 +77,24 @@ class DirectoryInfo {
                     console.log(`${matches.length} "${sourceDirName}" "${path.join(targetDirName, matches[0])}"`);
                     result.addMatches(sourceDirName, targetDirName, matches);
                 }
-                sourceFiles = sourceFiles.filter(x => !matches.includes(x));
+                sourceFiles = sourceFiles.filter(x => !matches.includes(x[0]));
             }
 
-            const tempDirName = path.join(sourceDirName, 'Missing');
-            if (!fs.existsSync(tempDirName)) {
-                fs.mkdirSync(tempDirName);
-            }
-            for (const sourceFile of sourceFiles) {
-                fs.renameSync(
-                    path.join(sourceDirName, sourceFile),
-                    path.join(tempDirName, sourceFile)
-                );
+            if (moveFiles && sourceDirName.length > 0) {
+                const missingDirName = path.join(sourceDirName, 'Missing');
+                if (!fs.existsSync(missingDirName)) {
+                    fs.mkdirSync(missingDirName);
+                }
+                for (const sourceFileNameAndSize of sourceFiles) {
+                    fs.renameSync(
+                        path.join(sourceDirName, sourceFileNameAndSize[0]),
+                        path.join(missingDirName, sourceFileNameAndSize[0])
+                    );
+                }
+                sourceDirName = missingDirName;
             }
 
-            result.addMissing(sourceDirName, sourceFiles);
+            result.addMissing(sourceDirName, sourceFiles.map(x => x[0]));
             result.save();
         }
     }

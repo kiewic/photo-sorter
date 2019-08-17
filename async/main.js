@@ -17,6 +17,9 @@ function walk(directoryName, info, done) {
             if (fileName === "Thumbs.db") {
                 return;
             }
+            if (fileName === "Missing") {
+                return;
+            }
 
             let fullPath = path.join(directoryName, fileName);
             filePromises.push(new Promise((resolve) => {
@@ -28,7 +31,7 @@ function walk(directoryName, info, done) {
                     if (stats.isDirectory()) {
                         walk(fullPath, info, resolve);
                     } else {
-                        onlyFiles.push(fileName);
+                        onlyFiles.push([fileName, stats.size]);
                         resolve();
                     }
                 });
@@ -50,7 +53,7 @@ function walk(directoryName, info, done) {
     console.time(label);
     const oneDriveInfo = new DirectoryInfo();
     const promise1 = new Promise((resolve) => {
-        const directoryName = 'C:\\Users\\kiewi\\OneDrive\\Pictures\\Camera Roll';
+        const directoryName = 'C:\\Users\\kiewi\\OneDrive\\Pictures';
         walk(directoryName, oneDriveInfo, (err) => {
             oneDriveInfo.summary();
             console.timeEnd(label);
@@ -60,8 +63,7 @@ function walk(directoryName, info, done) {
 
     const sourceInfo = new DirectoryInfo();
     const promise2 = new Promise((resolve) => {
-        // const directoryName = 'C:\\passport\\Pictures\\BabyGorilla20121228';
-        const directoryName = 'C:\\passport\\Pictures\\OneDrive_Pictures_CameraRoll';
+        const directoryName = 'C:\\passport\\Vaio\\';
         walk(directoryName, sourceInfo, (err) => {
             sourceInfo.summary();
             resolve();
